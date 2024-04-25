@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 project(ACE)
 
+set(CURRENT_SOLUTION_FOLDER "ACE/ace")
+
 set(VCPKG_APPLOCAL_DEPS OFF)
 add_library(${PROJECT_NAME} SHARED)
 
@@ -9,18 +11,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/ACE
 )
 
-file(GLOB ACE_SOURCES CONFIGURE_DEPENDS
-    "*.h"
-    "*.cpp"
-)
-
-list(REMOVE_ITEM ACE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pch.h"
-)
-
-set(ACE_INCL_LIST ${ACE_SOURCES})
-
-list(REMOVE_ITEM ACE_SOURCES
+set(ACE_EXCL_CXXS
     "${CMAKE_CURRENT_SOURCE_DIR}/ARGV.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Arg_Shifter.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Array_Base.cpp"
@@ -111,9 +102,32 @@ list(REMOVE_ITEM ACE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/Vector_T.cpp"
 )
 
+file(GLOB ACE_SOURCES CONFIGURE_DEPENDS
+    "*.cpp"
+)
+
+list(REMOVE_ITEM ACE_SOURCES
+    ${ACE_EXCL_CXXS}
+)
+
+file(GLOB ACE_INCL_LIST CONFIGURE_DEPENDS
+    "*.h"
+    "*.inl"
+)
+
+list(REMOVE_ITEM ACE_INCL_LIST
+    "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pch.h"
+)
+
+list(APPEND ACE_INCL_LIST
+    ${ACE_EXCL_CXXS}
+)
+
 target_sources(${PROJECT_NAME} PRIVATE
     ${ACE_SOURCES}
 )
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "${CURRENT_SOLUTION_FOLDER}")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ACE_SOURCES})
 source_group(".cmake" FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt)
 
@@ -151,6 +165,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     LINK_WHAT_YOU_USE ON
+)
+
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${BUILD_OUTPUT_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${BUILD_OUTPUT_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${BUILD_OUTPUT_DIR}"
 )
 
 install(TARGETS ${PROJECT_NAME}

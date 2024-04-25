@@ -21,6 +21,8 @@ endif()
 
 project(ACE_TAO)
 
+option(ACE_BUILD_EXAMPLES "Build ACE examples" ON)
+
 if (NOT OPENSSL_ROOT_DIR)
     set(OPENSSL_ROOT_DIR ${VCPKG_INSTALLED_DIR})
     message(STATUS ">>>> OPENSSL_ROOT_DIR setup from cmake: ${VCPKG_INSTALLED_DIR}")
@@ -47,5 +49,7 @@ endif()
 add_definitions(
     -DACE_HAS_DLL=1
 )
+
+set(BUILD_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${VCPKG_TARGET_TRIPLET})
 
 add_subdirectory(ACE)
