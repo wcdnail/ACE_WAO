@@ -36,7 +36,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "${CURRENT_SOLUTION_FOLD
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ACE_ROOT_FILES})
 
 add_subdirectory(ace)
-add_subdirectory(ace/SSL)
+if (ACE_BUILD_ASE_SSL)
+    add_subdirectory(ace/SSL)
+endif()
+if (ACE_BUILD_ASE_ASNMP)
+    add_subdirectory(ASNMP/asnmp)
+endif()
 if (ACE_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

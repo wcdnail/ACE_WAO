@@ -14,9 +14,10 @@ function(ACE_add_example_ex EXA_NAME)
         EXA
         "DLL;LIB"
         "CMD_LINE"
-        "SOURCES;DEFS;LIBS"
+        "SOURCES;DEFS;CFLAGS;LIBS"
         ${ARGN}
     )
+    #message(STATUS ">>>> Build example : ${EXA_NAME} DLL=${EXA_DLL} DEFS=${EXA_DEFS}")
     if (EXA_DLL)
         add_library(${EXA_NAME} SHARED)
     elseif (EXA_LIB)
@@ -39,25 +40,29 @@ function(ACE_add_example_ex EXA_NAME)
     target_compile_features(${EXA_NAME} PUBLIC
         ${ACE_CPP_STD}
     )
-    target_compile_definitions(${EXA_NAME} PRIVATE 
+    target_compile_definitions(${EXA_NAME} PUBLIC
         ${EXA_DEFS}
     )
-    target_compile_options(${EXA_NAME} PRIVATE $<$<PLATFORM_ID:Linux>:-fPIC>)
-    target_link_libraries(${EXA_NAME} PRIVATE
+    target_compile_options(${EXA_NAME} PUBLIC
+        $<$<PLATFORM_ID:Linux>:-fPIC>
+        ${EXA_CFLAGS}
+    )
+    target_link_libraries(${EXA_NAME} PUBLIC
         ACE
         ${EXA_LIBS}
     )
-    set_target_properties(${EXA_NAME} PROPERTIES LINK_WHAT_YOU_USE ON)
-    set_target_properties(${EXA_NAME}
-        PROPERTIES
+    set_target_properties(${EXA_NAME} PROPERTIES
+            LINK_WHAT_YOU_USE ON
             ARCHIVE_OUTPUT_DIRECTORY "${BUILD_OUTPUT_DIR}"
             LIBRARY_OUTPUT_DIRECTORY "${BUILD_OUTPUT_DIR}"
             RUNTIME_OUTPUT_DIRECTORY "${BUILD_OUTPUT_DIR}"
     )
     if (MSVC)
         set(DBG_PATH "PATH=$(PATH);${VCPKG_INSTALLED_CONF_DIR}\\bin")
-        set_target_properties(${EXA_NAME} PROPERTIES VS_DEBUGGER_ENVIRONMENT "${DBG_PATH}")
-        set_target_properties(${EXA_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "${EXA_CMD_LINE}")
+        set_target_properties(${EXA_NAME} PROPERTIES
+            VS_DEBUGGER_ENVIRONMENT "${DBG_PATH}"
+            VS_DEBUGGER_COMMAND_ARGUMENTS "${EXA_CMD_LINE}"
+        )
     endif()
 endfunction()
 

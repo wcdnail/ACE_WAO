@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 project(C++NPv2)
 
+set(${PROJECT_NAME}_ROOT_FILES
+    C++NPv2.mpc
+    README
+    svc.conf
+)
+add_custom_target(ARootOf_${PROJECT_NAME} SOURCES ${${PROJECT_NAME}_ROOT_FILES})
+set_target_properties(ARootOf_${PROJECT_NAME} PROPERTIES FOLDER "${CURRENT_SOLUTION_FOLDER}/${PROJECT_NAME}")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${${PROJECT_NAME}_ROOT_FILES})
+
 set(VCPKG_APPLOCAL_DEPS OFF)
 set(ACE_CURRENT_EXAMPLE_ROOT "${PROJECT_NAME}")
 
@@ -19,10 +28,13 @@ ACE_add_example_ex(AC_CLD
     SOURCES
         AC_Client_Logging_Daemon.cpp
         Logging_Handler.cpp
-        C++NPv2.mpc
     DLL ON
     DEFS
         AC_CLD_BUILD_DLL
+    LIBS
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        ACE_SSL
 )
 ACE_add_example_ex(AIO_CLD
     SOURCES
@@ -30,6 +42,10 @@ ACE_add_example_ex(AIO_CLD
     DLL ON
     DEFS
         AIO_CLD_BUILD_DLL
+    LIBS
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        ACE_SSL
 )
 ACE_add_example_ex(SLD
     SOURCES
@@ -52,7 +68,7 @@ ACE_add_example_ex(SLDex
         SLDex.cpp
     DLL ON
     DEFS
-        LDEX_BUILD_DLL
+        SLDEX_BUILD_DLL
 )
 ACE_add_example_ex(TPCLS
     SOURCES
@@ -62,6 +78,8 @@ ACE_add_example_ex(TPCLS
     DEFS
         TPCLS_BUILD_DLL
     LIBS
+        OpenSSL::SSL
+        OpenSSL::Crypto
         ACE_SSL
 )
 ACE_add_example_ex(TPLS SOURCES

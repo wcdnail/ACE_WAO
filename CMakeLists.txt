@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
 set(VCPKG_ROOT "$ENV{VCPKG_ROOT}" CACHE PATH "VCPKG_ROOT")
+if ("${VCPKG_ROOT}" STREQUAL "")
+    message(WARNING ">>>> VCPKG_ROOT is empty!")
+endif()
+
 if (NOT VCPKG_TARGET_TRIPLET OR "${VCPKG_TARGET_TRIPLET}" STREQUAL "x64-")
     if (WIN32)
         set(VCPKG_TARGET_TRIPLET x64-windows)
@@ -21,7 +25,9 @@ endif()
 
 project(ACE_TAO)
 
-option(ACE_BUILD_EXAMPLES "Build ACE examples" ON)
+option(ACE_BUILD_ASE_SSL    "Build ACE SSL module" ON)
+option(ACE_BUILD_ASE_ASNMP  "Build ACE ASNMO module" OFF)
+option(ACE_BUILD_EXAMPLES   "Build ACE examples" ON)
 
 if (NOT OPENSSL_ROOT_DIR)
     set(OPENSSL_ROOT_DIR ${VCPKG_INSTALLED_DIR})
@@ -43,6 +49,9 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(ACE_CPP_STD cxx_std_23)
     add_compile_options(
         /utf-8
+    )
+    add_definitions(
+        -D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
     )
 endif()
 
