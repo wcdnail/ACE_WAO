@@ -19,3 +19,9 @@ implementation of the OMG's [CORBA](https://www.omg.org/spec/CORBA/) standard. T
 is [here](https://www.dre.vanderbilt.edu/~schmidt/).
 
 All support on github is **best effort**, when you require a guaranteed response consider hiring one of the [commercial companies](https://github.com/DOCGroup/ACE_TAO/wiki/ACE-and-TAO-Commercial-support) who provide support and services for ACE/TAO.
+
+## Fork details
+
+Special fork for **VCPKG**.
+ACE, ACE_SSL, asnmp are managed by cmake.
+**C++23/20** is used.
