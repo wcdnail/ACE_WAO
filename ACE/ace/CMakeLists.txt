@@ -5,21 +5,6 @@ project(ACE)
 set(VCPKG_APPLOCAL_DEPS OFF)
 add_library(${PROJECT_NAME} SHARED)
 
-if (WIN32 OR MINGW OR MSYS)
-    set(config_h_contents "#include \"ace/config-windows.h\"\n")
-elseif (UNIX)
-    set(config_h_contents "#include \"ace/config-linux.h\"\n")
-elseif (OSX)
-    set(config_h_contents "#include \"ace/config-macosx.h\"\n")
-endif()
-
-#string(APPEND config_h_contents "#define ACE_USES_WCHAR\n") # no no no....
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    string(APPEND config_h_contents "#define ACE_HAS_DUMP 1\n")
-Endif()
-
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/config.h" "${config_h_contents}")
-
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/ACE
 )
@@ -27,6 +12,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 file(GLOB ACE_SOURCES CONFIGURE_DEPENDS
     "*.h"
     "*.cpp"
+)
+
+list(REMOVE_ITEM ACE_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pch.h"
 )
 
 set(ACE_INCL_LIST ${ACE_SOURCES})
@@ -128,6 +117,14 @@ target_sources(${PROJECT_NAME} PRIVATE
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ACE_SOURCES})
 source_group(".cmake" FILES ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt)
 
+target_precompile_headers(${PROJECT_NAME} PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pch.h>"
+)
+source_group(".pch" FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}.dir/cmake_pch.cxx)
+foreach(config_type ${CMAKE_CONFIGURATION_TYPES})
+    source_group(".pch" FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}.dir/${config_type}/cmake_pch.hxx)
+endforeach()
+
 target_compile_features(${PROJECT_NAME} PUBLIC
 )
 
@@ -145,18 +142,23 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 )
 
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
-    ${VCPKG_PREFIX_PATH}/include
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
+    $<$<PLATFORM_ID:Windows>:ws2_32.lib>
+    $<$<PLATFORM_ID:Windows>:iphlpapi.lib>
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     LINK_WHAT_YOU_USE ON
 )
 
-install (TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
+)
+
+install(FILES ${ACE_INCL_LIST}
+    DESTINATION include/ace
 )

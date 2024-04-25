@@ -1,6 +1,32 @@
 cmake_minimum_required(VERSION 3.26 FATAL_ERROR)
 
+set(VCPKG_ROOT "$ENV{VCPKG_ROOT}" CACHE PATH "VCPKG_ROOT")
+if (NOT VCPKG_TARGET_TRIPLET OR "${VCPKG_TARGET_TRIPLET}" STREQUAL "x64-")
+    if (WIN32)
+        set(VCPKG_TARGET_TRIPLET x64-windows)
+    elseif (MSYS OR MINGW)
+        set(VCPKG_TARGET_TRIPLET x64-mingw-dynamic)
+    else()
+        set(VCPKG_TARGET_TRIPLET x64-linux)
+    endif()
+    message(STATUS ">>>> VCPKG triplet setup from cmake: ${VCPKG_TARGET_TRIPLET}")
+endif()
+
+set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(VCPKG_INSTALLED_CONF_DIR "${VCPKG_INSTALLED_DIR}/debug")
+else()
+    set(VCPKG_INSTALLED_CONF_DIR "${VCPKG_INSTALLED_DIR}")
+endif()
+
 project(ACE_TAO)
+
+if (NOT OPENSSL_ROOT_DIR)
+    set(OPENSSL_ROOT_DIR ${VCPKG_INSTALLED_DIR})
+    message(STATUS ">>>> OPENSSL_ROOT_DIR setup from cmake: ${VCPKG_INSTALLED_DIR}")
+endif()
+
+find_package(OpenSSL REQUIRED)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     set(ACE_CPP_STD cxx_std_23)
