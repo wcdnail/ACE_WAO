@@ -105,7 +105,6 @@ set(ACE_EXCL_CXXS
 file(GLOB ACE_SOURCES CONFIGURE_DEPENDS
     "*.cpp"
 )
-
 list(REMOVE_ITEM ACE_SOURCES
     ${ACE_EXCL_CXXS}
 )
@@ -114,14 +113,18 @@ file(GLOB ACE_INCL_LIST CONFIGURE_DEPENDS
     "*.h"
     "*.inl"
 )
-
 list(REMOVE_ITEM ACE_INCL_LIST
     "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.pch.h"
 )
-
 list(APPEND ACE_INCL_LIST
     ${ACE_EXCL_CXXS}
 )
+
+file(GLOB ACE_INCLS_os_include          CONFIGURE_DEPENDS "os_include/*.h")
+file(GLOB ACE_INCLS_os_include_arpa     CONFIGURE_DEPENDS "os_include/arpa/*.h")
+file(GLOB ACE_INCLS_os_include_net      CONFIGURE_DEPENDS "os_include/net/*.h")
+file(GLOB ACE_INCLS_os_include_netinet  CONFIGURE_DEPENDS "os_include/netinet/*.h")
+file(GLOB ACE_INCLS_os_include_sys      CONFIGURE_DEPENDS "os_include/sys/*.h")
 
 target_sources(${PROJECT_NAME} PRIVATE
     ${ACE_SOURCES}
@@ -180,6 +183,9 @@ install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION lib
 )
 
-install(FILES ${ACE_INCL_LIST}
-    DESTINATION include/ace
-)
+install(FILES ${ACE_INCL_LIST}                DESTINATION include/ace)
+install(FILES ${ACE_INCLS_os_include}         DESTINATION include/ace/os_include)
+install(FILES ${ACE_INCLS_os_include_arpa}    DESTINATION include/ace/os_include/arpa)
+install(FILES ${ACE_INCLS_os_include_net}     DESTINATION include/ace/os_include/net)
+install(FILES ${ACE_INCLS_os_include_netinet} DESTINATION include/ace/os_include/netinet)
+install(FILES ${ACE_INCLS_os_include_sys}     DESTINATION include/ace/os_include/sys)

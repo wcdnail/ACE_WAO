@@ -29,13 +29,15 @@ project(ACE_TAO)
 
 option(ACE_BUILD_ASE_SSL    "Build ACE SSL module" ON)
 option(ACE_BUILD_WZLIB      "Build ACE with Zlib" ON)
-option(ACE_BUILD_ASE_ASNMP  "Build ACE ASNMP module" OFF)
+option(ACE_BUILD_ASE_ASNMP  "Build ACE ASNMP module" ON)
 option(ACE_BUILD_EXAMPLES   "Build ACE examples" OFF)
 
 if (NOT OPENSSL_ROOT_DIR)
     set(OPENSSL_ROOT_DIR ${VCPKG_INSTALLED_DIR})
     message(STATUS ">>>> OPENSSL_ROOT_DIR setup from cmake: ${VCPKG_INSTALLED_DIR}")
 endif()
+
+message(STATUS ">>>> BUILD on : ${BLD_COMPUTER_NAME}")
 
 find_package(OpenSSL REQUIRED)
 
