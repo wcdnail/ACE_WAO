@@ -1,0 +1,815 @@
+diff --git a/ace/Argv_Type_Converter.cpp b/ace/Argv_Type_Converter.cpp
+index a3e1c26..38b1348 100644
+--- a/ace/Argv_Type_Converter.cpp
++++ b/ace/Argv_Type_Converter.cpp
+@@ -10,7 +10,7 @@
+ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ 
+ #if defined (ACE_USES_WCHAR)
+-ACE_Argv_Type_Converter::ACE_Argv_Type_Converter (int &argc, wchar_t** argv)
++ACE_Argv_Type_Converter::ACE_Argv_Type_Converter (int &argc, const wchar_t** argv)
+   : saved_argc_ (argc),
+     char_argv_ (0),
+     wchar_argv_ (argv),
+@@ -27,7 +27,7 @@ ACE_Argv_Type_Converter::ACE_Argv_Type_Converter (int &argc, wchar_t** argv)
+ #endif  // ACE_USES_WCHAR
+ 
+ 
+-ACE_Argv_Type_Converter::ACE_Argv_Type_Converter (int &argc, char **argv)
++ACE_Argv_Type_Converter::ACE_Argv_Type_Converter (int &argc, const char **argv)
+   : saved_argc_(argc),
+     char_argv_(argv)
+ #if defined (ACE_USES_WCHAR)
+@@ -58,7 +58,7 @@ ACE_Argv_Type_Converter::~ACE_Argv_Type_Converter ()
+         this->align_wchar_with_char ();
+ 
+       for (int i = 0; i < this->before_pass_argc_; ++i)
+-        ACE_OS::free (this->char_argv_[i]);
++        ACE_OS::free ((void*)this->char_argv_[i]);
+ 
+       delete [] this->char_argv_;
+     }
+@@ -69,7 +69,7 @@ ACE_Argv_Type_Converter::~ACE_Argv_Type_Converter ()
+         this->align_char_with_wchar ();
+ 
+       for (int i = 0; i < this->before_pass_argc_; ++i)
+-        ACE_OS::free (this->wchar_argv_[i]);
++        ACE_OS::free ((void*)this->wchar_argv_[i]);
+ 
+       delete [] this->wchar_argv_;
+     }
+@@ -85,7 +85,7 @@ ACE_Argv_Type_Converter::initialize ()
+       // Make a copy of argv in 'char'. type Create one more argv entry
+       // than original argc for the NULL.
+       ACE_NEW (char_argv_,
+-               char *[this->saved_argc_ + 1]);
++               const char *[this->saved_argc_ + 1]);
+       this->char_argv_[saved_argc_] = 0;  // last entry of argv is
+                                           // always a NULL
+     }
+@@ -93,7 +93,7 @@ ACE_Argv_Type_Converter::initialize ()
+     {
+       // make a copy of argv in 'wchar_t' type
+       ACE_NEW (this->wchar_argv_,
+-               wchar_t*[this->saved_argc_ + 1]);
++               const wchar_t*[this->saved_argc_ + 1]);
+       this->wchar_argv_[saved_argc_] = 0;
+     }
+ }
+@@ -105,7 +105,7 @@ ACE_Argv_Type_Converter::align_char_with_wchar ()
+   for (int wchar_argv_index = 0; wchar_argv_index < this->saved_argc_;
+        ++wchar_argv_index)
+     {
+-      wchar_t *match_argv = this->wchar_argv_[wchar_argv_index];
++      const wchar_t *match_argv = this->wchar_argv_[wchar_argv_index];
+       // if n'th entries of both argv lists are different
+       if (ACE_OS::strcmp (this->char_argv_[wchar_argv_index],
+                           ACE_TEXT_ALWAYS_CHAR (match_argv)) != 0)
+@@ -118,7 +118,7 @@ ACE_Argv_Type_Converter::align_char_with_wchar ()
+                                   ACE_TEXT_ALWAYS_CHAR (match_argv)) == 0)
+                 {
+                   // swap the pointers in the char argv list
+-                  char *temp = this->char_argv_[wchar_argv_index];
++                  const char *temp = this->char_argv_[wchar_argv_index];
+                   this->char_argv_[wchar_argv_index] = this->char_argv_[i];
+                   this->char_argv_[i] = temp;
+                   break;
+@@ -136,7 +136,7 @@ ACE_Argv_Type_Converter::align_wchar_with_char ()
+   for (int char_argv_index = 0; char_argv_index < saved_argc_;
+        ++char_argv_index)
+     {
+-      char* match_argv = this->char_argv_[char_argv_index];
++      const char* match_argv = this->char_argv_[char_argv_index];
+       // if n'th entries of both argv lists are different
+       if (ACE_OS::strcmp (
+             ACE_TEXT_ALWAYS_CHAR (this->wchar_argv_[char_argv_index]),
+@@ -150,7 +150,7 @@ ACE_Argv_Type_Converter::align_wchar_with_char ()
+                     ACE_TEXT_ALWAYS_CHAR(this->wchar_argv_[i]),
+                     match_argv) == 0) {
+                 // swap the pointers in the char argv list
+-                wchar_t* temp = this->wchar_argv_[char_argv_index];
++                const wchar_t* temp = this->wchar_argv_[char_argv_index];
+                 this->wchar_argv_[char_argv_index] = this->wchar_argv_[i];
+                 this->wchar_argv_[i] = temp;
+                 break;
+@@ -170,12 +170,12 @@ ACE_Argv_Type_Converter::cleanup ()
+       //  Check whether it's ours to delete.
+       if (original_type_)
+         {
+-          ACE_OS::free (this->char_argv_[i]);
++          ACE_OS::free ((void*)this->char_argv_[i]);
+           this->char_argv_[i] = 0;
+         }
+       else
+         {
+-          ACE_OS::free (this->wchar_argv_[i]);
++          ACE_OS::free ((void*)this->wchar_argv_[i]);
+           this->wchar_argv_[i] = 0;
+         }
+     }
+diff --git a/ace/Argv_Type_Converter.h b/ace/Argv_Type_Converter.h
+index 5a7979d..41ff49d 100644
+--- a/ace/Argv_Type_Converter.h
++++ b/ace/Argv_Type_Converter.h
+@@ -37,19 +37,19 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ class ACE_Export ACE_Argv_Type_Converter
+ {
+ public:
+-  ACE_Argv_Type_Converter (int &argc, char** argv);
++  ACE_Argv_Type_Converter (int &argc, const char** argv);
+ 
+ #if defined (ACE_USES_WCHAR)
+-  ACE_Argv_Type_Converter (int &argc, wchar_t** argv);
++  ACE_Argv_Type_Converter (int &argc, const wchar_t** argv);
+ #endif  // ACE_USES_WCHAR
+ 
+   ~ACE_Argv_Type_Converter ();
+ 
+   /// Returns the pointer of converted command line.
+-  ACE_TCHAR** get_TCHAR_argv ();
++  const ACE_TCHAR** get_TCHAR_argv ();
+ 
+   /// Returns the pointer of ASCII (char) command line.
+-  char** get_ASCII_argv ();
++  const char** get_ASCII_argv ();
+ 
+   /// Returns the number of sub parameters (argc).
+   int& get_argc ();
+@@ -83,11 +83,11 @@ private:
+   int &saved_argc_;
+ 
+   /// Data member pointer that contains converted argv in ACE_ANTI_TCHAR.
+-  char** char_argv_;
++  const char** char_argv_;
+ 
+ #if defined (ACE_USES_WCHAR)
+   /// Data member pointer that contains converted argv in ACE_TCHAR.
+-  wchar_t** wchar_argv_;
++  const wchar_t** wchar_argv_;
+ 
+   /// argc value before any argv has been passed.
+   int before_pass_argc_;
+diff --git a/ace/Argv_Type_Converter.inl b/ace/Argv_Type_Converter.inl
+index c79688c..d76cb7f 100644
+--- a/ace/Argv_Type_Converter.inl
++++ b/ace/Argv_Type_Converter.inl
+@@ -1,7 +1,7 @@
+ // -*- C++ -*-
+ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ 
+-ACE_INLINE ACE_TCHAR**
++ACE_INLINE const ACE_TCHAR**
+ ACE_Argv_Type_Converter::get_TCHAR_argv ()
+ {
+ #if defined (ACE_USES_WCHAR)
+@@ -17,7 +17,7 @@ ACE_Argv_Type_Converter::get_TCHAR_argv ()
+ #endif  // ACE_USES_WCHAR
+ }
+ 
+-ACE_INLINE char**
++ACE_INLINE const char**
+ ACE_Argv_Type_Converter::get_ASCII_argv ()
+ {
+ #if defined (ACE_USES_WCHAR)
+diff --git a/ace/Get_Opt.cpp b/ace/Get_Opt.cpp
+index 02cdbef..a6f7ee4 100644
+--- a/ace/Get_Opt.cpp
++++ b/ace/Get_Opt.cpp
+@@ -89,7 +89,7 @@ ACE_ALLOC_HOOK_DEFINE(ACE_Get_Opt)
+ void ACE_Get_Opt::ACE_Get_Opt_Init (const ACE_TCHAR *optstring)
+ #else
+ ACE_Get_Opt::ACE_Get_Opt (int argc,
+-                          ACE_TCHAR **argv,
++                          const ACE_TCHAR **argv,
+                           const ACE_TCHAR *optstring,
+                           int skip,
+                           int report_errors,
+@@ -236,7 +236,7 @@ ACE_Get_Opt::long_option_i ()
+   ACE_TRACE ("ACE_Get_Opt::long_option_i");
+ 
+   ACE_Get_Opt_Long_Option *p;
+-  ACE_TCHAR *s = this->nextchar_;
++  const ACE_TCHAR *s = this->nextchar_;
+   int hits = 0;
+   int exact = 0;
+   ACE_Get_Opt_Long_Option *pfound = 0;
+@@ -368,7 +368,7 @@ ACE_Get_Opt::short_option_i ()
+   // Set last_option_ to opt
+   this->last_option (opt);
+ 
+-  ACE_TCHAR *oli = 0;
++  const ACE_TCHAR *oli = 0;
+   oli =
+     const_cast<ACE_TCHAR*> (ACE_OS::strchr (this->optstring_->c_str (), opt));
+ 
+@@ -491,7 +491,7 @@ ACE_Get_Opt::long_option (const ACE_TCHAR *name,
+     {
+       // If the short_option already exists, make sure it matches, otherwise
+       // add it.
+-      ACE_TCHAR *s = 0;
++      const ACE_TCHAR *s = 0;
+       if ((s = const_cast<ACE_TCHAR*> (
+                  ACE_OS::strchr (this->optstring_->c_str (),
+                                  short_option))) != 0)
+@@ -636,7 +636,7 @@ ACE_Get_Opt::permute_args ()
+   u_long cyclelen, i, j, ncycle, nnonopts, nopts;
+   u_long opt_end = this->optind;
+   int cstart, pos = 0;
+-  ACE_TCHAR *swap = 0;
++  const ACE_TCHAR *swap = 0;
+ 
+   nnonopts = this->nonopt_end_ - this->nonopt_start_;
+   nopts = opt_end - this->nonopt_end_;
+@@ -657,9 +657,9 @@ ACE_Get_Opt::permute_args ()
+             pos += nopts;
+           swap = this->argv_[pos];
+ 
+-          ((ACE_TCHAR **)this->argv_)[pos] = argv_[cstart];
++          ((const ACE_TCHAR **)this->argv_)[pos] = argv_[cstart];
+ 
+-          ((ACE_TCHAR **)this->argv_)[cstart] = swap;
++          ((const ACE_TCHAR **)this->argv_)[cstart] = swap;
+         }
+     }
+ }
+diff --git a/ace/Get_Opt.h b/ace/Get_Opt.h
+index 96e06c3..01e0575 100644
+--- a/ace/Get_Opt.h
++++ b/ace/Get_Opt.h
+@@ -31,6 +31,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+  *  of ACE_Get_Opt.
+  */
+ 
++
+ /**
+  * @class ACE_Get_Opt
+  *
+@@ -168,7 +169,7 @@ public:
+    */
+ #ifndef ACE_USES_WCHAR
+   ACE_Get_Opt (int argc,
+-               ACE_TCHAR **argv,
++               const ACE_TCHAR **argv,
+                const ACE_TCHAR *optstring = ACE_TEXT (""),
+                int skip_args = 1,
+                int report_errors = 0,
+@@ -180,14 +181,14 @@ private:
+   void ACE_Get_Opt_Init (const ACE_TCHAR *optstring);
+ public:
+   ACE_Get_Opt (int argc,
+-               ACE_TCHAR **argv,
++               const ACE_TCHAR **argv,
+                const ACE_TCHAR *optstring = ACE_TEXT (""),
+                int skip_args = 1,
+                int report_errors = 0,
+                int ordering = PERMUTE_ARGS,
+                int long_only = 0);
+   ACE_Get_Opt (int argc,
+-               ACE_TCHAR **argv,
++               const ACE_TCHAR **argv,
+                const char *optstring,
+                int skip_args = 1,
+                int report_errors = 0,
+@@ -240,7 +241,7 @@ public:
+    * @c operator() finds an option that takes an argument, the argument
+    * value is returned from this method, otherwise it returns 0.
+    */
+-  ACE_TCHAR *opt_arg () const;
++  const ACE_TCHAR *opt_arg () const;
+ 
+   /**
+    * Returns the most recently matched option character. Especially
+@@ -304,7 +305,7 @@ public:
+   int argc () const;
+ 
+   /// Accessor for the internal @c argv_ pointer.
+-  ACE_TCHAR **argv () const;
++  const ACE_TCHAR **argv () const;
+ 
+   /// Accessor for the @c last_option that was processed.  This allows
+   /// applications to know if the found option was a short or long
+@@ -342,7 +343,7 @@ public:
+    * write code that relies on this member being public; use the
+    * @c argv() accessor method instead.
+    */
+-  ACE_TCHAR **argv_;
++  const ACE_TCHAR **argv_;
+ 
+   /// Index in @c argv_ of the next element to be scanned.
+   /**
+@@ -371,7 +372,7 @@ public:
+    * write code that relies on this member being public; use the
+    * @c opt_arg() accessor method instead.
+    */
+-  ACE_TCHAR *optarg;
++  const ACE_TCHAR *optarg;
+ 
+ private:
+   /**
+@@ -456,7 +457,7 @@ private:
+    * If this is zero, or a null string, it means resume the scan
+    * by advancing to the next <argv>-element.
+    */
+-  ACE_TCHAR *nextchar_;
++  const ACE_TCHAR *nextchar_;
+ 
+   /// Most recently matched short option character.
+   int optopt_;
+diff --git a/ace/Get_Opt.inl b/ace/Get_Opt.inl
+index 950d707..c136f6e 100644
+--- a/ace/Get_Opt.inl
++++ b/ace/Get_Opt.inl
+@@ -13,13 +13,13 @@ ACE_Get_Opt::argc () const
+   return this->argc_;
+ }
+ 
+-ACE_INLINE ACE_TCHAR **
++ACE_INLINE const ACE_TCHAR **
+ ACE_Get_Opt::argv () const
+ {
+   return this->argv_;
+ }
+ 
+-ACE_INLINE ACE_TCHAR*
++ACE_INLINE const ACE_TCHAR*
+ ACE_Get_Opt::opt_arg () const
+ {
+   return this->optarg;
+@@ -39,7 +39,7 @@ ACE_Get_Opt::opt_ind ()
+ 
+ #ifdef ACE_USES_WCHAR
+ ACE_INLINE  ACE_Get_Opt::ACE_Get_Opt (int argc,
+-               ACE_TCHAR **argv,
++               const ACE_TCHAR **argv,
+                const ACE_TCHAR *optstring,
+                int skip_args,
+                int report_errors,
+@@ -65,7 +65,7 @@ ACE_INLINE  ACE_Get_Opt::ACE_Get_Opt (int argc,
+ }
+ 
+ ACE_INLINE  ACE_Get_Opt::ACE_Get_Opt (int argc,
+-               ACE_TCHAR **argv,
++               const ACE_TCHAR **argv,
+                const char *optstring,
+                int skip_args,
+                int report_errors,
+diff --git a/ace/Logging_Strategy.cpp b/ace/Logging_Strategy.cpp
+index 7b3335e..9ded79e 100644
+--- a/ace/Logging_Strategy.cpp
++++ b/ace/Logging_Strategy.cpp
+@@ -20,9 +20,12 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ // accordingly.
+ 
+ void
+-ACE_Logging_Strategy::priorities (ACE_TCHAR *priority_string,
++ACE_Logging_Strategy::priorities (const ACE_TCHAR *cpriority_string,
+                                   ACE_Log_Msg::MASK_TYPE mask)
+ {
++  ACE_TCHAR priority_string[1024] = { 0 };
++  ACE_OS::strcpy(priority_string, cpriority_string);
++
+   u_long priority_mask = 0;
+ 
+   // Choose priority mask to change.
+@@ -102,8 +105,11 @@ ACE_Logging_Strategy::priorities (ACE_TCHAR *priority_string,
+ // accordingly.
+ 
+ void
+-ACE_Logging_Strategy::tokenize (ACE_TCHAR *flag_string)
++ACE_Logging_Strategy::tokenize (const ACE_TCHAR *cflag_string)
+ {
++  ACE_TCHAR flag_string[1024] = { 0 };
++  ACE_OS::strcpy(flag_string, cflag_string);
++
+   ACE_TCHAR *strtokp;
+ 
+   for (ACE_TCHAR *flag = ACE_OS::strtok_r (flag_string,
+@@ -130,10 +136,10 @@ ACE_Logging_Strategy::tokenize (ACE_TCHAR *flag_string)
+ }
+ 
+ int
+-ACE_Logging_Strategy::parse_args (int argc, ACE_TCHAR *argv[])
++ACE_Logging_Strategy::parse_args (int argc, const ACE_TCHAR *argv[])
+ {
+   ACE_TRACE ("ACE_Logging_Strategy::parse_args");
+-  ACE_TCHAR *temp;
++  const ACE_TCHAR *temp;
+ 
+   // Perform data member initializations.  BTW, do *not* initialize
+   // <thread_priority_mask_> or <process_priority_mask_> here to avoid
+@@ -315,7 +321,7 @@ ACE_Logging_Strategy::fini ()
+ }
+ 
+ int
+-ACE_Logging_Strategy::init (int argc, ACE_TCHAR *argv[])
++ACE_Logging_Strategy::init (int argc, const ACE_TCHAR *argv[])
+ {
+   ACE_TRACE ("ACE_Logging_Strategy::init");
+ 
+diff --git a/ace/Logging_Strategy.h b/ace/Logging_Strategy.h
+index e853dfd..984c0c9 100644
+--- a/ace/Logging_Strategy.h
++++ b/ace/Logging_Strategy.h
+@@ -85,7 +85,7 @@ public:
+   ~ACE_Logging_Strategy ();
+ 
+   /// Dynamic linking initialization hook.
+-  virtual int init (int argc, ACE_TCHAR *argv[]);
++  virtual int init (int argc, const ACE_TCHAR *argv[]);
+ 
+   /// Dynamic linking termination hook.
+   virtual int fini ();
+@@ -139,16 +139,16 @@ public:
+    * @arg '-w' Cause the logfile to be wiped out, both on startup and on
+    *           reconfiguration.
+    */
+-  int parse_args (int argc, ACE_TCHAR *argv[]);
++  int parse_args (int argc, const ACE_TCHAR *argv[]);
+ 
+   void log_msg (ACE_Log_Msg *log_msg);
+ 
+ protected:
+   /// Tokenize to set all the flags
+-  void tokenize (ACE_TCHAR *flag_string);
++  void tokenize (const ACE_TCHAR *flag_string);
+ 
+   /// Tokenize to set priorities (either process or thread one).
+-  void priorities (ACE_TCHAR *priority_string,
++  void priorities (const ACE_TCHAR *priority_string,
+                    ACE_Log_Msg::MASK_TYPE mask);
+ 
+   /// Current thread's priority mask set by @c priorities
+diff --git a/ace/Monitor_Control/Auto_Update_Starter.cpp b/ace/Monitor_Control/Auto_Update_Starter.cpp
+index ad603b3..1232c08 100644
+--- a/ace/Monitor_Control/Auto_Update_Starter.cpp
++++ b/ace/Monitor_Control/Auto_Update_Starter.cpp
+@@ -20,7 +20,7 @@ namespace ACE
+     Auto_Update_Starter::svc ()
+     {
+       MC_ADMINMANAGER* mgr =
+-        ACE_Dynamic_Service<MC_ADMINMANAGER>::instance ("MC_ADMINMANAGER");
++        ACE_Dynamic_Service<MC_ADMINMANAGER>::instance (ACE_TEXT("MC_ADMINMANAGER"));
+ 
+       /// We want the thread in which the event loop is started to
+       /// own the reactor, otherwise the handle_timeout() calls
+diff --git a/ace/Naming_Context.cpp b/ace/Naming_Context.cpp
+index d5acc96..402e928 100644
+--- a/ace/Naming_Context.cpp
++++ b/ace/Naming_Context.cpp
+@@ -394,7 +394,7 @@ ACE_Naming_Context::dump ()
+ }
+ 
+ int
+-ACE_Naming_Context::init (int argc, ACE_TCHAR *argv[])
++ACE_Naming_Context::init (int argc, const ACE_TCHAR *argv[])
+ {
+   if (ACE::debug ())
+     ACELIB_DEBUG ((LM_DEBUG,
+@@ -571,11 +571,11 @@ ACE_Name_Options::context (ACE_Naming_Context::Context_Scope_Type context)
+ }
+ 
+ void
+-ACE_Name_Options::parse_args (int argc, ACE_TCHAR *argv[])
++ACE_Name_Options::parse_args (int argc, const ACE_TCHAR *argv[])
+ {
+   ACE_TRACE ("ACE_Name_Options::parse_args");
+ 
+-  const ACE_TCHAR* program_name = 0;
++  const ACE_TCHAR *program_name = 0;
+ 
+   // Argc can be 0 on some platforms like VxWorks.
+   if (argc > 0)
+diff --git a/ace/Naming_Context.h b/ace/Naming_Context.h
+index e109bfa..49842f5 100644
+--- a/ace/Naming_Context.h
++++ b/ace/Naming_Context.h
+@@ -99,7 +99,7 @@ public:
+   // = Dynamic initialization hooks.
+   /// Initialize name options and naming context when dynamically
+   /// linked.
+-  virtual int init (int argc, ACE_TCHAR *argv[]);
++  virtual int init (int argc, const ACE_TCHAR *argv[]);
+ 
+   /// Close down the test when dynamically unlinked.
+   virtual int fini ();
+@@ -281,7 +281,7 @@ public:
+ 
+   /// Parse arguments.
+   void parse_args (int argc,
+-                   ACE_TCHAR *argv[]);
++                   const ACE_TCHAR *argv[]);
+ 
+   /// Set the port number
+   void nameserver_port (int port);
+diff --git a/ace/OS_main.cpp b/ace/OS_main.cpp
+index 1fbacb1..7dafcce 100644
+--- a/ace/OS_main.cpp
++++ b/ace/OS_main.cpp
+@@ -27,7 +27,7 @@
+ 
+ #    if !(defined (ACE_VXWORKS) && !defined (__RTP__))
+ /* forward declaration */
+-extern int ace_main_i (int, char *[]);
++extern int ace_main_i (int, const char *[]);
+ #    endif
+ 
+ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+@@ -35,14 +35,14 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ #    if defined (ACE_VXWORKS) && !defined (__RTP__)
+ ace_main_proc_ptr vx_ace_main_i_ptr = 0;
+ 
+-int ace_os_main_i (int argc, char *argv[]) /* user's entry point, e.g., main */
++int ace_os_main_i (int argc, const char *argv[]) /* user's entry point, e.g., main */
+ {
+   ACE_MAIN_OBJECT_MANAGER
+   return vx_ace_main_i_ptr ? (*vx_ace_main_i_ptr) (argc, argv) : (-1);   /* what the user calls "main" */
+ }
+ #    else /* !ACE_VXWORKS && !__RTP__ */
+ ACE_Export int
+-ace_os_main_i (int argc, char *argv[]) /* user's entry point, e.g., main */
++ace_os_main_i (int argc, const char *argv[]) /* user's entry point, e.g., main */
+ {
+   ACE_MAIN_OBJECT_MANAGER
+   return ace_main_i (argc, argv);           /* what the user calls "main" */
+@@ -79,13 +79,13 @@ ACE_Main_Base::~ACE_Main_Base ()
+   ACE::fini ();
+ }
+ 
+-int ACE_Main_Base::run (int argc, char *argv[])
++int ACE_Main_Base::run (int argc, const char *argv[])
+ {
+   return this->run_i (argc, argv);
+ }
+ 
+ ACE_Export int
+-ace_os_main_i (ACE_Main_Base &mbase, int argc, char *argv[]) /* user's entry point, e.g., main */
++ace_os_main_i (ACE_Main_Base &mbase, int argc, const char *argv[]) /* user's entry point, e.g., main */
+ {
+   ACE_MAIN_OBJECT_MANAGER
+   return mbase.run (argc, argv);           /* what the user calls "main" */
+diff --git a/ace/OS_main.h b/ace/OS_main.h
+index 873e4e0..7b4580f 100644
+--- a/ace/OS_main.h
++++ b/ace/OS_main.h
+@@ -47,8 +47,8 @@
+       // ACE_TCHAR and calls the ACE_TMAIN entrypoint.
+ #     include "ace/Argv_Type_Converter.h"
+ #     define ACE_TMAIN \
+-        ace_main_i (int, ACE_TCHAR *[]); /* forward declaration */ \
+-        int main (int argc, char *argv[]) { \
++        ace_main_i (int, const ACE_TCHAR *[]); /* forward declaration */ \
++        int main (int argc, const char *argv[]) { \
+           ACE_Argv_Type_Converter wide_argv (argc, argv); \
+           return ace_main_i (argc, wide_argv.get_TCHAR_argv ()); \
+         } \
+@@ -89,7 +89,7 @@ int ace_os_main_i (int, char *[]); \
+ ACE_END_VERSIONED_NAMESPACE_DECL \
+ int ace_main_i(int, char *[]); \
+ int \
+-ACE_MAIN (int argc, char *argv[])    /* user's entry point, e.g., main */ \
++ACE_MAIN (int argc, const char *argv[])    /* user's entry point, e.g., main */ \
+ { \
+   vx_ace_main_i_ptr = ace_main_i; \
+   return ace_os_main_i (argc, argv); /* what the user calls "main" */ \
+@@ -105,7 +105,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL \
+ int ace_os_main_i (int, char *[]); \
+ ACE_END_VERSIONED_NAMESPACE_DECL \
+ int \
+-ACE_MAIN (int argc, char *argv[])    /* user's entry point, e.g., main */ \
++ACE_MAIN (int argc, const char *argv[])    /* user's entry point, e.g., main */ \
+ { \
+   resolvInit(); \
+   return ace_os_main_i (argc, argv); /* what the user calls "main" */ \
+@@ -121,7 +121,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL \
+ ACE_Export int ace_os_main_i (int, char *[]); \
+ ACE_END_VERSIONED_NAMESPACE_DECL \
+ int \
+-ACE_MAIN (int argc, char *argv[])    /* user's entry point, e.g., main */ \
++ACE_MAIN (int argc, const char *argv[])    /* user's entry point, e.g., main */ \
+ { \
+   return ace_os_main_i (argc, argv); /* what the user calls "main" */ \
+ } \
+@@ -171,8 +171,8 @@ class ACE_Export ACE_Main_Base
+ public:
+   ACE_Main_Base ();
+   virtual ~ACE_Main_Base ();
+-  int run (int, char *[]);
+-  virtual int run_i (int, char *[]) = 0;
++  int run (int, const char *[]);
++  virtual int run_i (int, const char *[]) = 0;
+ };
+ 
+ ACE_END_VERSIONED_NAMESPACE_DECL
+@@ -184,21 +184,21 @@ ACE_END_VERSIONED_NAMESPACE_DECL
+ ** DLL, look up it's main() entrypoint, and call it.
+ */
+ #       if defined (ACE_BUILD_LABVIEW_EXE_AS_DLL)
+-extern "C" __declspec (dllexport) int main (int, char *[]);
++extern "C" __declspec (dllexport) int main (int, const char *[]);
+ #       endif /* ACE_BUILD_LABVIEW_EXE_AS_DLL) */
+ 
+ #       define main \
+-ace_main_i (int, char *[]); \
++ace_main_i (int, const char *[]); \
+ ACE_BEGIN_VERSIONED_NAMESPACE_DECL \
+-ACE_Export int ace_os_main_i (ACE_Main_Base&, int, char *[]); \
+-class ACE_Main : public ACE_Main_Base {int run_i (int, char *[]);}; \
+-inline int ACE_Main::run_i (int argc, char *argv[])  \
++ACE_Export int ace_os_main_i (ACE_Main_Base&, int, const char *[]); \
++class ACE_Main : public ACE_Main_Base {int run_i (int, const char *[]);}; \
++inline int ACE_Main::run_i (int argc, const char *argv[])  \
+ { \
+   return ace_main_i (argc, argv); \
+ } \
+ ACE_END_VERSIONED_NAMESPACE_DECL \
+ int \
+-ACE_MAIN (int argc, char *argv[]) /* user's entry point, e.g., wmain */ \
++ACE_MAIN (int argc, const char *argv[]) /* user's entry point, e.g., wmain */ \
+ { \
+   ACE_Main m; \
+   return m.run (argc, argv); /*ace_os_main_i (m, argc, argv);   what the user calls "main" */ \
+@@ -214,7 +214,7 @@ ace_main_i
+ #    include <iar_dynamic_init.h>
+ #    include "ace/MQX_Filesystem.h"
+ #    define ACE_TMAIN \
+-ace_main_i(int argc, ACE_TCHAR *argv[]); \
++ace_main_i(int argc, const ACE_TCHAR *argv[]); \
+ static void main_task(uint32_t param) { \
+   __iar_dynamic_initialization(); \
+   RTCS_create(); \
+diff --git a/ace/Service_Config.cpp b/ace/Service_Config.cpp
+index 9e2ca55..9666813 100644
+--- a/ace/Service_Config.cpp
++++ b/ace/Service_Config.cpp
+@@ -145,7 +145,7 @@ sig_atomic_t ACE_Service_Config::reconfig_occurred_ = 0;
+ // = Set by command-line options.
+ 
+ /// Pathname of file to write process id.
+-ACE_TCHAR *ACE_Service_Config::pid_file_name_ = 0;
++const ACE_TCHAR *ACE_Service_Config::pid_file_name_ = 0;
+ 
+ /// Shall we become a daemon process?
+ bool ACE_Service_Config::be_a_daemon_ = false;
+@@ -162,7 +162,7 @@ ACE_Service_Config::dump () const
+ }
+ 
+ int
+-ACE_Service_Config::parse_args_i (int argc, ACE_TCHAR *argv[])
++ACE_Service_Config::parse_args_i (int argc, const ACE_TCHAR *argv[])
+ {
+   ACE_TRACE ("ACE_Service_Config::parse_args_i");
+ 
+diff --git a/ace/Service_Config.h b/ace/Service_Config.h
+index a3a785b..abd2170 100644
+--- a/ace/Service_Config.h
++++ b/ace/Service_Config.h
+@@ -334,7 +334,7 @@ private:
+    * Implements whats different in the command line parameter processing
+    * for this class, as opposed to the base class.
+    */
+-  virtual int parse_args_i (int argc, ACE_TCHAR *argv[]);
++  virtual int parse_args_i (int argc, const ACE_TCHAR *argv[]);
+ 
+   /// = Static interfaces
+ 
+@@ -461,7 +461,7 @@ private:
+    *              the service configuration file(s).
+    */
+   static int open (int argc,
+-                   ACE_TCHAR *argv[],
++                   const ACE_TCHAR *argv[],
+                    const ACE_TCHAR *logger_key = ACE_DEFAULT_LOGGER_KEY,
+                    bool ignore_static_svcs = true,
+                    bool ignore_default_svc_conf_file = false,
+@@ -601,7 +601,7 @@ private:
+    *        Please observe the difference between options '-f' that looks
+    *        for a list of files and here a list of services.
+    */
+-  static int parse_args (int, ACE_TCHAR *argv[]);
++  static int parse_args (int, const ACE_TCHAR *argv[]);
+ 
+ #if (ACE_USES_CLASSIC_SVC_CONF == 0)
+   static ACE_Service_Type *create_service_type  (const ACE_TCHAR *n,
+@@ -656,7 +656,7 @@ private:
+   static bool be_a_daemon_;
+ 
+   /// Pathname of file to write process id.
+-  static ACE_TCHAR *pid_file_name_;
++  static const ACE_TCHAR *pid_file_name_;
+ 
+   /// Number of the signal used to trigger reconfiguration.
+   static int signum_;
+diff --git a/ace/Service_Config.inl b/ace/Service_Config.inl
+index eeb2911..e59f7bf 100644
+--- a/ace/Service_Config.inl
++++ b/ace/Service_Config.inl
+@@ -30,7 +30,7 @@ ACE_Service_Config::open (const ACE_TCHAR program_name[],
+ 
+ ACE_INLINE int
+ ACE_Service_Config::open (int argc,
+-                          ACE_TCHAR *argv[],
++                          const ACE_TCHAR *argv[],
+                           const ACE_TCHAR *logger_key,
+                           bool ignore_static_svcs,
+                           bool ignore_default_svc_conf,
+@@ -59,7 +59,7 @@ ACE_Service_Config::open (int argc,
+ // Handle the command-line options intended for the
+ // ACE_Service_Config.
+ ACE_INLINE int
+-ACE_Service_Config::parse_args (int argc, ACE_TCHAR *argv[])
++ACE_Service_Config::parse_args (int argc, const ACE_TCHAR *argv[])
+ {
+   return ACE_Service_Config::current ()->parse_args (argc, argv);
+ }
+diff --git a/ace/Service_Gestalt.cpp b/ace/Service_Gestalt.cpp
+index 049c997..329ce87 100644
+--- a/ace/Service_Gestalt.cpp
++++ b/ace/Service_Gestalt.cpp
+@@ -1159,7 +1159,7 @@ ACE_Service_Gestalt::process_commandline_directives ()
+ 
+ 
+ int
+-ACE_Service_Gestalt::parse_args (int argc, ACE_TCHAR *argv[])
++ACE_Service_Gestalt::parse_args (int argc, const ACE_TCHAR *argv[])
+ {
+   ACE_TRACE ("ACE_Service_Gestalt::parse_args");
+   bool unused_ignore_default_svc_conf = true;
+@@ -1168,7 +1168,7 @@ ACE_Service_Gestalt::parse_args (int argc, ACE_TCHAR *argv[])
+ 
+ int
+ ACE_Service_Gestalt::parse_args_i (int argc,
+-                                   ACE_TCHAR *argv[],
++                                   const ACE_TCHAR *argv[],
+                                    bool &ignore_default_svc_conf_file)
+ {
+   ACE_TRACE ("ACE_Service_Gestalt::parse_args_i");
+diff --git a/ace/Service_Gestalt.h b/ace/Service_Gestalt.h
+index c31e0ef..882ed71 100644
+--- a/ace/Service_Gestalt.h
++++ b/ace/Service_Gestalt.h
+@@ -177,7 +177,7 @@ public:
+    *              the service configuration file(s).
+    */
+   int open (int argc,
+-            ACE_TCHAR *argv[],
++            const ACE_TCHAR *argv[],
+             const ACE_TCHAR *logger_key = 0,
+             bool ignore_static_svcs = true,
+             bool ignore_default_svc_conf_file = false,
+@@ -242,7 +242,7 @@ public:
+    *        Please observe the difference between options '-f' that looks
+    *        for a list of files and here a list of services.
+    */
+-  int parse_args (int argc, ACE_TCHAR *argv[]);
++  int parse_args (int argc, const ACE_TCHAR *argv[]);
+ 
+   /**
+    * Process (or re-process) service configuration requests that are
+@@ -328,7 +328,7 @@ public:
+   ACE_Service_Repository* current_service_repository ();
+ 
+ protected:
+-  int parse_args_i (int, ACE_TCHAR *argv[],
++  int parse_args_i (int, const ACE_TCHAR *argv[],
+                     bool& ignore_default_svc_conf_file);
+ 
+   /**
+diff --git a/ace/Service_Gestalt.inl b/ace/Service_Gestalt.inl
+index 3add951..8d5fd2d 100644
+--- a/ace/Service_Gestalt.inl
++++ b/ace/Service_Gestalt.inl
+@@ -25,7 +25,7 @@ ACE_Service_Gestalt::open (const ACE_TCHAR program_name[],
+ 
+ ACE_INLINE int
+ ACE_Service_Gestalt::open (int argc,
+-                          ACE_TCHAR *argv[],
++                          const ACE_TCHAR *argv[],
+                           const ACE_TCHAR *logger_key,
+                           bool ignore_static_svcs,
+                           bool ignore_default_svc_conf,
+diff --git a/ace/Service_Manager.cpp b/ace/Service_Manager.cpp
+index 7862e23..4429a4b 100644
+--- a/ace/Service_Manager.cpp
++++ b/ace/Service_Manager.cpp
+@@ -97,7 +97,7 @@ ACE_Service_Manager::info (ACE_TCHAR **strp, size_t length) const
+ }
+ 
+ int
+-ACE_Service_Manager::init (int argc, ACE_TCHAR *argv[])
++ACE_Service_Manager::init (int argc, const ACE_TCHAR *argv[])
+ {
+   ACE_TRACE ("ACE_Service_Manager::init");
+   ACE_INET_Addr local_addr (ACE_Service_Manager::DEFAULT_PORT_);
+diff --git a/ace/Service_Manager.h b/ace/Service_Manager.h
+index 51161d5..403991b 100644
+--- a/ace/Service_Manager.h
++++ b/ace/Service_Manager.h
+@@ -71,7 +71,7 @@ protected:
+   virtual int list_services ();
+ 
+   // = Dynamic linking hooks.
+-  virtual int init (int argc, ACE_TCHAR *argv[]);
++  virtual int init (int argc, const ACE_TCHAR *argv[]);
+   virtual int info (ACE_TCHAR **info_string, size_t length) const;
+   virtual int fini ();
+ 

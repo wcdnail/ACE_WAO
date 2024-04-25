@@ -1,0 +1,123 @@
+diff --git a/ace/Log_Record.cpp b/ace/Log_Record.cpp
+index ea4a782..531213b 100644
+--- a/ace/Log_Record.cpp
++++ b/ace/Log_Record.cpp
+@@ -142,12 +142,14 @@ ACE_Log_Record::msg_data (const ACE_TCHAR *data)
+ 
+ ACE_Log_Record::ACE_Log_Record (ACE_Log_Priority lp,
+                                 time_t ts_sec,
+-                                long p)
++                                long p,
++                                ACE_thread_t tid)
+   : length_ (0),
+     type_ (ACE_UINT32 (lp)),
+     secs_ (ts_sec),
+     usecs_ (0),
+     pid_ (ACE_UINT32 (p)),
++    tid_ (tid),
+     msg_data_ (0),
+     msg_data_size_ (0),
+     category_(0)
+@@ -167,12 +169,14 @@ ACE_Log_Record::ACE_Log_Record (ACE_Log_Priority lp,
+ 
+ ACE_Log_Record::ACE_Log_Record (ACE_Log_Priority lp,
+                                 const ACE_Time_Value &ts,
+-                                long p)
++                                long p,
++                                ACE_thread_t tid)
+   : length_ (0),
+     type_ (ACE_UINT32 (lp)),
+     secs_ (ts.sec ()),
+     usecs_ ((ACE_UINT32) ts.usec ()),
+     pid_ (ACE_UINT32 (p)),
++    tid_ (tid),
+     msg_data_ (0),
+     msg_data_size_ (0),
+     category_(0)
+@@ -209,6 +213,7 @@ ACE_Log_Record::ACE_Log_Record ()
+     secs_ (0),
+     usecs_ (0),
+     pid_ (0),
++    tid_(0),
+     msg_data_ (0),
+     msg_data_size_ (0),
+     category_(0)
+diff --git a/ace/Log_Record.h b/ace/Log_Record.h
+index 152e294..0063fdd 100644
+--- a/ace/Log_Record.h
++++ b/ace/Log_Record.h
+@@ -25,8 +25,10 @@
+ 
+ #include "ace/Default_Constants.h"
+ #include "ace/Basic_Types.h"
++#include "ace/Thread.h"
+ #include "ace/iosfwd.h"
+ 
++
+ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ 
+ class ACE_Time_Value;
+@@ -61,11 +63,12 @@ public:
+   ACE_Log_Record ();
+   ACE_Log_Record (ACE_Log_Priority lp,
+                   time_t time_stamp,
+-                  long pid);
++                  long pid,
++                  ACE_thread_t tid = ACE_Thread::self ());
+   ACE_Log_Record (ACE_Log_Priority lp,
+                   const ACE_Time_Value &time_stamp,
+-                  long pid);
+-
++                  long pid,
++                  ACE_thread_t tid = ACE_Thread::self ());
+   /// Default dtor.
+   ~ACE_Log_Record ();
+ 
+@@ -143,6 +146,12 @@ public:
+ 
+   /// Set the process id of the Log_Record.
+   void pid (long);
++  
++  /// Get the thread id of the Log_Record.
++  ACE_thread_t tid () const;
++
++  /// Set the thread id of the Log_Record.
++  void tid (ACE_thread_t);
+ 
+   /// Get the message data of the Log_Record.
+   const ACE_TCHAR *msg_data () const;
+@@ -183,6 +192,9 @@ private:
+ 
+   /// Id of process that generated the logging record.
+   ACE_UINT32 pid_;
++  
++  /// Id of thread that generated the logging record.
++  ACE_thread_t tid_;
+ 
+   /// Logging record data
+   ACE_TCHAR *msg_data_;   // Heap-allocated text message area
+diff --git a/ace/Log_Record.inl b/ace/Log_Record.inl
+index 9c46fae..8622c47 100644
+--- a/ace/Log_Record.inl
++++ b/ace/Log_Record.inl
+@@ -93,6 +93,20 @@ ACE_Log_Record::pid (long p)
+   this->pid_ = (ACE_UINT32) p;
+ }
+ 
++ACE_INLINE ACE_thread_t
++ACE_Log_Record::tid () const
++{
++  ACE_TRACE ("ACE_Log_Record::tid");
++  return this->tid_;
++}
++
++ACE_INLINE void
++ACE_Log_Record::tid (ACE_thread_t p)
++{
++  ACE_TRACE ("ACE_Log_Record::tid");
++  this->tid_ = p;
++}
++
+ ACE_INLINE const ACE_TCHAR *
+ ACE_Log_Record::msg_data () const
+ {
