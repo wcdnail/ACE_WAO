@@ -48,6 +48,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(ACE_CPP_STD cxx_std_20)
+    add_compile_options(
+        -fno-permissive
+    )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     set(ACE_CPP_STD cxx_std_20)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
