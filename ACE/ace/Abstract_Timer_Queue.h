@@ -12,6 +12,7 @@
  */
 
 #include "ace/Versioned_Namespace.h"
+#include "ace/Time_Value.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 

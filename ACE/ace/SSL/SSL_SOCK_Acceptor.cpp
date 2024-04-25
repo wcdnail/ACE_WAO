@@ -130,7 +130,11 @@ ACE_SSL_SOCK_Acceptor::ssl_accept (ACE_SSL_SOCK_Stream &new_stream,
         {
           // Must have at least one handle to wait for at this point.
           ACE_ASSERT (rd_handle.num_set() == 1 || wr_handle.num_set () == 1);
+#ifdef ACE_WIN32
+          status = ACE::select (static_cast<int>(reinterpret_cast<ptrdiff_t>(handle)) + 1,
+#else
           status = ACE::select (int (handle) + 1,
+#endif
                                 &rd_handle,
                                 &wr_handle,
                                 0,

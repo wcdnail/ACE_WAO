@@ -23,7 +23,6 @@ set(ACE_EXCL_CXXS
     "${CMAKE_CURRENT_SOURCE_DIR}/Auto_Event.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Auto_Functor.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Auto_IncDec_T.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Auto_Ptr.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Based_Pointer_T.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Bound_Ptr.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Cached_Connect_Strategy_T.cpp"
@@ -164,6 +163,8 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
 target_link_libraries(${PROJECT_NAME} PRIVATE
     $<$<PLATFORM_ID:Windows>:ws2_32.lib>
     $<$<PLATFORM_ID:Windows>:iphlpapi.lib>
+    $<$<PLATFORM_ID:Windows>:mswsock.lib>
+    $<$<PLATFORM_ID:Windows>:netapi32.lib>
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

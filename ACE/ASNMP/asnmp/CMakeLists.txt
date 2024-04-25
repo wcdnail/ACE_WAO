@@ -66,7 +66,7 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    # $<$<PLATFORM_ID:Windows>:ws2_32.lib>
+    $<$<PLATFORM_ID:Windows>:ws2_32.lib>
     # $<$<PLATFORM_ID:Windows>:iphlpapi.lib>
     # OpenSSL::SSL
     # OpenSSL::Crypto

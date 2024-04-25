@@ -129,7 +129,11 @@ ACE_SSL_SOCK_Stream::recvv (iovec *io_vec,
 
   // Check the status of the current socket.
   switch (
+#ifdef ACE_WIN32
+    ACE_OS::select (static_cast<int>(reinterpret_cast<ptrdiff_t>(this->get_handle ())) + 1,
+#else
     ACE_OS::select (int (this->get_handle ()) + 1,
+#endif
                     handle_set,
                     0,
                     0,

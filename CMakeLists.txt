@@ -37,31 +37,34 @@ if (NOT OPENSSL_ROOT_DIR)
     message(STATUS ">>>> OPENSSL_ROOT_DIR setup from cmake: ${VCPKG_INSTALLED_DIR}")
 endif()
 
-message(STATUS ">>>> BUILD on : ${BLD_COMPUTER_NAME}")
+message(STATUS ">>>>  BUILD on : ${BLD_COMPUTER_NAME}")
+message(STATUS ">>>>   ACE_SSL : ${ACE_BUILD_ASE_SSL}")
+message(STATUS ">>>>      ZLIB : ${ACE_BUILD_WZLIB}")
+message(STATUS ">>>> ACE_asnmp : ${ACE_BUILD_ASE_ASNMP}")
+message(STATUS ">>>>  Examples : ${ACE_BUILD_EXAMPLES}")
 
 find_package(OpenSSL REQUIRED)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     set(ACE_CPP_STD cxx_std_23)
-    add_compile_options(
-        -Wno-unused-value
-    )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(ACE_CPP_STD cxx_std_20)
-    add_compile_options(
-        -fno-permissive
-    )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     set(ACE_CPP_STD cxx_std_20)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(ACE_CPP_STD cxx_std_23)
-    add_compile_options(
-        /utf-8
-    )
     add_definitions(
         -D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
     )
 endif()
+
+add_compile_options(
+    $<$<CXX_COMPILER_ID:GNU>:-fno-permissive>
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-value>
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-pragma-once-outside-header>
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-ignored-attributes>
+    $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
+)
 
 add_definitions(
     -DACE_HAS_DLL=1
