@@ -1,4 +1,8 @@
 {
     "cmake.configureOnOpen": false,
-    "cmake.configureArgs": ["-DCMAKE_INSTALL_PREFIX=INSTALLED", "-DBLD_COMPUTER_NAME=MYCOMP"]
+    "cmake.configureArgs": [
+        "-DVCPKG_TARGET_TRIPLET=x64-msys-clang",
+        "-DCMAKE_INSTALL_PREFIX=INSTALLED",
+        "-DBLD_COMPUTER_NAME=MYCOMP"
+    ]
 }
